@@ -179,17 +179,17 @@ class Cube {
         // Generate the faces
         this.faces = [
             //        y-
-            new Face([this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]], 'white', [0, -1, 0]),
+            new Face([this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, -1, 0]),
             //        x+
-            new Face([this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]], 'gray', [1, 0, 0]),
+            new Face([this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); })[1, 0, 0]),
             //        y+
-            new Face([this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]], 'gray', [0, 1, 0]),
+            new Face([this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); })[0, 1, 0]),
             //        x-
-            new Face([this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]], 'white', [-1, 0, 0]),
+            new Face([this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [-1, 0, 0]),
             //        z+
-            new Face([this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]], 'white', [0, 0, 1]),
+            new Face([this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, 0, 1]),
             //        z-
-            new Face([this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]], 'white', [0, 0, -1])
+            new Face([this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, 0, -1])
         ];
     }
 }
@@ -402,11 +402,11 @@ setInterval(() => {
     }
     if (keys.ArrowUp) { camera.y -= 0.1; }
     if (keys.ArrowDown) { camera.y += 0.1; }
-    
+
     camera.ry += mouse.x / 3;
     camera.rx -= mouse.y / 3;
-    
-    if (camera.rx > 90) { camera.rx = 90 } else if (camera.rx < -90) { camera.rx = -90}
+
+    if (camera.rx > 90) { camera.rx = 90; } else if (camera.rx < -90) { camera.rx = -90; }
 
     console.log(camera.rx);
     mouse.x = 0;
