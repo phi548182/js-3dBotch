@@ -57,17 +57,6 @@ class Scene {
             return distanceA - distanceB;
         });
 
-        function shouldRenderFace(camera, averagePoint) {
-            // calculate forward vector
-            let forward = rotate(0, 0, -1, camera.rx, camera.ry, camera.rz);
-            // calculate vector from camera to face
-            let x = camera.x - averagePoint.x;
-            let y = camera.y - averagePoint.y;
-            let z = camera.z - averagePoint.z;
-            // calculate dot product
-            let dot = x * forward[0] + y * forward[1] + z * forward[2];
-            return dot > 2;
-        }
 
         for (let i = 0; i < vertices.length; i++) {
             vertices[i].draw(aCam);
@@ -75,6 +64,7 @@ class Scene {
 
         for (let i = 0; i < faces.length; i++) {
             if (shouldRenderFace(aCam, faces[i].averagePoint, faces[i].normal)) {
+                new Light(0, 0, 10, .5).calculate(faces);
                 faces[i].draw();
             }
         }
@@ -111,6 +101,10 @@ class Vertex {
         let z = this.x * other.y - this.y * other.x;
         return new Vertex(x, y, z);
     }
+    dotProduct(other) {
+        return this.x * other.x + this.y * other.y + this.z * other.z;
+    }
+
 }
 
 
@@ -134,7 +128,7 @@ class Face {
         y /= vertices.length;
         z /= vertices.length;
 
-        this.averagePoint = { 'x': x, 'y': y, 'z': z };
+        this.averagePoint = new Vertex(x, y, z);
     }
     draw() {
         ctx.beginPath();
@@ -161,6 +155,28 @@ class Camera {
     }
 }
 
+class Light {
+    constructor(x, y, z, lum = .5) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    calculate(faces) {
+        for (let i = 0; i < faces.length; i++) {
+            if (Math.random() > .999) {
+                // console.log(faces[i].averagePoint);
+                // console.log(isVisible(faces, faces[i].averagePoint, new Vertex(this.x, this.y, this.z)));
+            }
+            if (isVisible(faces, faces[i].averagePoint, new Vertex(0, 10, 0)) === true) {
+                faces[i].color = 'white';
+            } else {
+                faces[i].color = 'gray';
+            }
+        }
+    }
+}
+
 class Cube {
     constructor(center, size) {
         let d = size / 2;
@@ -179,17 +195,23 @@ class Cube {
         // Generate the faces
         this.faces = [
             //        y-
-            new Face([this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, -1, 0]),
+            new Face([this.vertices[0], this.vertices[1], this.vertices[2]], 'black', [0, -1, 0]),
+            new Face([this.vertices[2], this.vertices[3], this.vertices[0]], 'black', [0, -1, 0]),
             //        x+
-            new Face([this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [1, 0, 0]),
+            new Face([this.vertices[3], this.vertices[2], this.vertices[5]], 'black', [1, 0, 0]),
+            new Face([this.vertices[5], this.vertices[4], this.vertices[3]], 'black', [1, 0, 0]),
             //        y+
-            new Face([this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, 1, 0]),
+            new Face([this.vertices[4], this.vertices[5], this.vertices[6]], 'black', [0, 1, 0]),
+            new Face([this.vertices[6], this.vertices[7], this.vertices[4]], 'black', [0, 1, 0]),
             //        x-
-            new Face([this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [-1, 0, 0]),
+            new Face([this.vertices[7], this.vertices[6], this.vertices[1]], 'black', [-1, 0, 0]),
+            new Face([this.vertices[1], this.vertices[0], this.vertices[7]], 'black', [-1, 0, 0]),
             //        z+
-            new Face([this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, 0, 1]),
+            new Face([this.vertices[7], this.vertices[0], this.vertices[3]], 'black', [0, 0, 1]),
+            new Face([this.vertices[3], this.vertices[4], this.vertices[7]], 'black', [0, 0, 1]),
             //        z-
-            new Face([this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]], "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); }), [0, 0, -1])
+            new Face([this.vertices[1], this.vertices[6], this.vertices[5]], 'black', [0, 0, -1]),
+            new Face([this.vertices[5], this.vertices[2], this.vertices[1]], 'black', [0, 0, -1])
         ];
     }
 }
@@ -259,6 +281,54 @@ function project(x, y, z, cx1, cy1, cz1, rx, ry, rz, fov) {
     return [b.x, b.y];
 
     // NEEDS FIXING UP
+}
+
+function distance(p1, p2) {
+    return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2 + (p2.z - p1.z) ** 2);
+}
+
+function shouldRenderFace(camera, averagePoint) {
+    // calculate forward vector
+    let forward = rotate(0, 0, -1, camera.rx, camera.ry, camera.rz);
+    // calculate vector from camera to face
+    let x = camera.x - averagePoint.x;
+    let y = camera.y - averagePoint.y;
+    let z = camera.z - averagePoint.z;
+    // calculate dot product
+    let dot = x * forward[0] + y * forward[1] + z * forward[2];
+    return dot > 2;
+}
+
+function isVisible(faces, p1, p2) {
+    // Create a vector from point 1 to point 2
+    let d = new Vertex(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+
+    // Check for intersection with each face
+    for (let i = 0; i < faces.length; i++) {
+        if (toString(faces[i].averagePoint) == toString(p1)) {
+            // console.log('a');
+            continue;
+        }
+        let vertex1 = faces[i].vertices[0];
+        let vertex2 = faces[i].vertices[1];
+        let vertex3 = faces[i].vertices[2];
+
+        // Create edge vectors
+        let e1 = new Vertex(vertex2.x - vertex1.x, vertex2.y - vertex1.y, vertex2.z - vertex1.z);
+        let e2 = new Vertex(vertex3.x - vertex1.x, vertex3.y - vertex1.y, vertex3.z - vertex1.z);
+
+        // Compute determinant to check if line and plane are parallel
+        let det = d.dotProduct(e1.cross(e2));
+        if (det === 0) continue;
+
+        // Compute intersection point
+        let t = (e1.cross(e2)).dotProduct(new Vertex(vertex1.x - p1.x, vertex1.y - p1.y, vertex1.z - p1.z)) / det;
+        if (t < 0 || t > 1) continue;
+        if (new Vertex(p1.x + d.x * t, p1.y + d.y * t, p1.z + d.z * t).x - p1.x < 0.5 && new Vertex(p1.x + d.x * t, p1.y + d.y * t, p1.z + d.z * t).x - p1.x > -0.5) console.log('a');
+        return new Vertex(p1.x + d.x * t, p1.y + d.y * t, p1.z + d.z * t);
+    }
+    console.log(false);
+    return true;
 }
 
 function rotate(x, y, z, rx, ry, rz) {
